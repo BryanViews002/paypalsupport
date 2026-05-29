@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <title>Contact Us | PayPal Help Center</title>
+  <meta name="description" content="Contact PayPal support. Chat with a specialist or send us a message and we'll get back to you."/>
+  <link rel="icon" type="image/png" href="https://www.paypalobjects.com/marketing/web/icons/monogram/pp32.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="pp-header" id="pp-header">
+  <div class="pp-header-inner">
+    <div class="pp-logo-wrap">
+      <a href="index.html" aria-label="PayPal Home">
+        <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" class="pp-logo"/>
+      </a>
+    </div>
+    <nav class="pp-nav" aria-label="Main navigation">
+      <a href="#" class="pp-nav-link">Personal</a>
+      <a href="#" class="pp-nav-link">Business</a>
+      <a href="#" class="pp-nav-link">Developer</a>
+      <a href="index.html" class="pp-nav-link pp-nav-active">Help</a>
+    </nav>
+    <div class="pp-header-actions">
+      <a href="#" class="pp-btn pp-btn-ghost">Log In</a>
+      <a href="#" class="pp-btn pp-btn-primary">Sign Up</a>
+    </div>
+    <button class="pp-mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- MOBILE NAV -->
+<div class="pp-mobile-nav" id="mobileNav">
+  <a href="#">Personal</a>
+  <a href="#">Business</a>
+  <a href="#">Developer</a>
+  <a href="index.html">Help</a>
+  <div class="pp-mobile-nav-actions">
+    <a href="#" class="pp-btn pp-btn-ghost">Log In</a>
+    <a href="#" class="pp-btn pp-btn-primary">Sign Up</a>
+  </div>
+</div>
+
+<!-- BREADCRUMB -->
+<div class="pp-breadcrumb">
+  <div class="pp-container">
+    <a href="index.html">Help Center</a>
+    <span class="pp-breadcrumb-sep">›</span>
+    <span>Contact Us</span>
+  </div>
+</div>
+
+<!-- CONTACT HERO -->
+<section class="pp-contact-hero">
+  <div class="pp-container">
+    <h1 class="pp-contact-hero-title">Contact Us</h1>
+    <p class="pp-contact-hero-sub">Choose how you'd like to reach us. A specialist will respond to your message.</p>
+  </div>
+</section>
+
+<!-- CONTACT OPTIONS + FORM -->
+<section class="pp-section pp-contact-section">
+  <div class="pp-container pp-contact-layout">
+
+    <!-- Left: Contact Form -->
+    <div class="pp-contact-main">
+
+      <!-- Conversation / Chat Window -->
+      <div class="pp-chat-card" id="chatCard">
+        <div class="pp-chat-header">
+          <div class="pp-chat-agent-info">
+            <div class="pp-chat-agent-avatar">
+              <img src="https://www.paypalobjects.com/marketing/web/icons/monogram/pp32.png" alt="PayPal Support"/>
+            </div>
+            <div>
+              <div class="pp-chat-agent-name">PayPal Support</div>
+              <div class="pp-chat-agent-status"><span class="pp-online-dot"></span> Online – typically replies within minutes</div>
+            </div>
+          </div>
+          <div class="pp-chat-secure-badge">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 1L2 4v4c0 3.3 2.5 6.4 6 7 3.5-.6 6-3.7 6-7V4L8 1z" fill="#003087" opacity=".15" stroke="#003087" stroke-width="1.2"/></svg>
+            Secure
+          </div>
+        </div>
+
+        <div class="pp-chat-messages" id="chatMessages">
+          <!-- Welcome message -->
+          <div class="pp-msg pp-msg-agent" id="welcomeMsg">
+            <div class="pp-msg-avatar">
+              <img src="https://www.paypalobjects.com/marketing/web/icons/monogram/pp32.png" alt="Agent"/>
+            </div>
+            <div class="pp-msg-bubble">
+              <p>Hi there! 👋 Welcome to PayPal Support. What can I help you with today?</p>
+              <span class="pp-msg-time" data-timestamp="now"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pre-chat form (shown before conversation starts) -->
+        <div class="pp-prechat-form" id="prechatForm">
+          <div class="pp-form-group">
+            <label for="userFullName">Full Name</label>
+            <input type="text" id="userFullName" placeholder="Your full name" autocomplete="name"/>
+          </div>
+          <div class="pp-form-group">
+            <label for="userEmail">Email Address</label>
+            <input type="email" id="userEmail" placeholder="Email linked to your PayPal account" autocomplete="email"/>
+          </div>
+          <div class="pp-form-group">
+            <label for="issueCategory">What do you need help with?</label>
+            <select id="issueCategory">
+              <option value="">Select a topic...</option>
+              <option>Account access or security</option>
+              <option>Sending or receiving money</option>
+              <option>Disputes or claims</option>
+              <option>Refunds or cancellations</option>
+              <option>Unauthorized activity</option>
+              <option>Withdrawals or bank account</option>
+              <option>PayPal credit or debit card</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="pp-form-group">
+            <label for="prechatMessage">Describe your issue</label>
+            <textarea id="prechatMessage" rows="4" placeholder="Please describe your issue in as much detail as possible..."></textarea>
+          </div>
+          <button class="pp-btn pp-btn-primary pp-btn-full" id="startChatBtn">Start Chat</button>
+        </div>
+
+        <!-- Chat input (shown after conversation starts) -->
+        <div class="pp-chat-input-wrap" id="chatInputWrap" style="display:none;">
+          <div class="pp-chat-typing" id="agentTyping" style="display:none;">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="pp-chat-input-row">
+            <textarea class="pp-chat-input" id="chatInput" placeholder="Type your message…" rows="1" aria-label="Type your message"></textarea>
+            <button class="pp-chat-send-btn" id="sendMsgBtn" aria-label="Send message">
+              <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+                <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: Help sidebar -->
+    <aside class="pp-contact-sidebar">
+      <div class="pp-sidebar-card">
+        <h3>Quick self-help</h3>
+        <ul class="pp-sidebar-list">
+          <li><a href="index.html#faqList">Reset my password</a></li>
+          <li><a href="index.html#faqList">Check my refund status</a></li>
+          <li><a href="index.html#faqList">Open a dispute</a></li>
+          <li><a href="index.html#faqList">Remove a bank account</a></li>
+          <li><a href="index.html#faqList">Cancel a subscription</a></li>
+          <li><a href="index.html#faqList">Verify my identity</a></li>
+        </ul>
+      </div>
+      <div class="pp-sidebar-card pp-sidebar-security">
+        <div class="pp-sidebar-security-icon">
+          <svg viewBox="0 0 48 48" fill="none" width="40" height="40"><path d="M24 4L6 12V24C6 33.9 14.1 43.1 24 45C33.9 43.1 42 33.9 42 24V12L24 4Z" fill="#003087" opacity=".12" stroke="#003087" stroke-width="2"/></svg>
+        </div>
+        <h4>Your privacy is protected</h4>
+        <p>All conversations are encrypted and handled by verified PayPal support staff.</p>
+      </div>
+      <div class="pp-sidebar-card">
+        <h3>Response times</h3>
+        <div class="pp-response-item">
+          <span class="pp-response-channel">💬 Live Chat</span>
+          <span class="pp-response-time">~2 min</span>
+        </div>
+        <div class="pp-response-item">
+          <span class="pp-response-channel">📧 Message</span>
+          <span class="pp-response-time">1–2 hours</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="pp-footer">
+  <div class="pp-container">
+    <div class="pp-footer-top">
+      <div class="pp-footer-logo">
+        <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" width="80"/>
+      </div>
+      <div class="pp-footer-links">
+        <div class="pp-footer-col">
+          <h4>Help</h4>
+          <a href="index.html">Help Center</a>
+          <a href="contact.html">Contact Us</a>
+          <a href="#">Resolution Center</a>
+          <a href="#">Community Forum</a>
+        </div>
+        <div class="pp-footer-col">
+          <h4>Products</h4>
+          <a href="#">Send &amp; Receive Money</a>
+          <a href="#">PayPal Debit Card</a>
+          <a href="#">PayPal Credit</a>
+          <a href="#">Buy Now, Pay Later</a>
+        </div>
+        <div class="pp-footer-col">
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Newsroom</a>
+          <a href="#">Jobs</a>
+          <a href="#">Security</a>
+        </div>
+      </div>
+    </div>
+    <div class="pp-footer-bottom">
+      <p>© 1999–2026 PayPal, Inc. All rights reserved.</p>
+      <div class="pp-footer-legal">
+        <a href="#">Privacy Statement</a>
+        <a href="#">Cookies</a>
+        <a href="#">Legal</a>
+        <a href="#">Accessibility</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

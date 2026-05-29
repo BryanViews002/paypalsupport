@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PayPal Support — Admin Dashboard</title>
+  <link rel="icon" type="image/png" href="https://www.paypalobjects.com/marketing/web/icons/monogram/pp32.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="admin-body">
+
+<div class="admin-layout">
+
+  <!-- ====== SIDEBAR ====== -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="admin-sidebar-logo">
+        <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal"/>
+        <span class="admin-sidebar-badge">Admin</span>
+      </div>
+      <span class="admin-status-badge status-online" id="agentStatusBadge">● Online</span>
+    </div>
+
+    <div class="admin-search">
+      <input type="search" id="convSearch" placeholder="Search conversations…" autocomplete="off"/>
+    </div>
+
+    <div class="admin-sidebar-tabs">
+      <button class="admin-sidebar-tab active" data-filter="all" id="tabAll">All <span class="admin-sidebar-count" id="countAll">0</span></button>
+      <button class="admin-sidebar-tab" data-filter="open" id="tabOpen">Open <span class="admin-sidebar-count" id="countOpen">0</span></button>
+      <button class="admin-sidebar-tab" data-filter="resolved" id="tabResolved">Resolved <span class="admin-sidebar-count" id="countResolved">0</span></button>
+    </div>
+
+    <div class="admin-conversations" id="adminConvList">
+      <!-- Populated by JS -->
+      <div class="admin-conv-empty" id="noConvs" style="padding:24px 16px;color:#4a5568;font-size:13px;text-align:center;">
+        No conversations yet.<br>Waiting for users to reach out…
+      </div>
+    </div>
+
+    <div class="admin-sidebar-footer">
+      <button class="admin-btn" id="clearResolvedBtn" title="Clear all resolved conversations">🗑 Clear Resolved</button>
+      <button class="admin-btn" id="refreshBtn" title="Refresh">↻ Refresh</button>
+    </div>
+  </aside>
+
+  <!-- ====== MAIN PANEL ====== -->
+  <main class="admin-main" id="adminMain">
+
+    <!-- Empty state -->
+    <div class="admin-empty-state" id="adminEmptyState">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect x="8" y="14" width="48" height="36" rx="6" stroke="#4a5568" stroke-width="2"/>
+        <path d="M8 22h48M20 38h8M20 30h24" stroke="#4a5568" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h3>No conversation selected</h3>
+      <p>Select a conversation from the sidebar to view and respond to messages.</p>
+    </div>
+
+    <!-- Chat View (hidden until a conv is selected) -->
+    <div class="admin-chat-view" id="adminChatView">
+
+      <!-- Header -->
+      <div class="admin-main-header">
+        <div class="admin-main-header-left">
+          <h2 id="adminConvTitle">—</h2>
+          <span class="admin-main-header-sub" id="adminConvSub">—</span>
+        </div>
+        <div class="admin-main-header-right">
+          <span class="admin-conv-tag tag-open" id="adminConvStatusBadge">open</span>
+          <button class="admin-btn admin-btn-success" id="resolveBtn">✓ Mark Resolved</button>
+          <button class="admin-btn admin-btn-danger" id="deleteConvBtn">Delete</button>
+          <a href="index.html" class="admin-btn" target="_blank" title="View live site">↗ Live Site</a>
+        </div>
+      </div>
+
+      <!-- User info strip -->
+      <div class="admin-user-info" id="adminUserInfo">
+        <div class="admin-info-item">
+          <span class="admin-info-label">Name</span>
+          <span class="admin-info-value" id="infoName">—</span>
+        </div>
+        <div class="admin-info-item">
+          <span class="admin-info-label">Email</span>
+          <span class="admin-info-value" id="infoEmail">—</span>
+        </div>
+        <div class="admin-info-item">
+          <span class="admin-info-label">Issue Category</span>
+          <span class="admin-info-value" id="infoCategory">—</span>
+        </div>
+        <div class="admin-info-item">
+          <span class="admin-info-label">Session ID</span>
+          <span class="admin-info-value" id="infoId">—</span>
+        </div>
+        <div class="admin-info-item">
+          <span class="admin-info-label">Started</span>
+          <span class="admin-info-value" id="infoCreated">—</span>
+        </div>
+        <div class="admin-info-item">
+          <span class="admin-info-label">Messages</span>
+          <span class="admin-info-value" id="infoMsgCount">—</span>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="admin-chat-messages" id="adminChatMessages">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Reply Box -->
+      <div class="admin-reply-box" id="adminReplyBox">
+        <div class="admin-reply-toolbar">
+          <span style="font-size:11px;color:#4a5568;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:4px;">Quick:</span>
+          <button class="admin-quick-reply" data-text="Thanks for contacting PayPal Support! I'm reviewing your case now.">Reviewing case…</button>
+          <button class="admin-quick-reply" data-text="Could you please provide the transaction ID or the date and amount of the transaction in question?">Request TX info</button>
+          <button class="admin-quick-reply" data-text="I can confirm your account is now fully restored. You should be able to log in and use all features normally.">Account restored</button>
+          <button class="admin-quick-reply" data-text="Your refund has been processed and should appear in your account within 3–5 business days.">Refund processed</button>
+          <button class="admin-quick-reply" data-text="I've escalated your case to our specialist team. You'll receive an email at the address on file within 24 hours.">Escalate</button>
+          <button class="admin-quick-reply" data-text="Is there anything else I can help you with today?">Anything else?</button>
+        </div>
+        <div class="admin-reply-input-row">
+          <textarea class="admin-reply-textarea" id="adminReplyInput" placeholder="Type your reply as PayPal Support…" rows="2"></textarea>
+          <button class="admin-reply-btn" id="adminSendBtn">
+            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <path d="M18 2L9 11M18 2L12 18L9 11L2 8L18 2Z" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Send Reply
+          </button>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:11px;color:#4a5568;">Press <kbd style="background:#0f1117;border:1px solid #2d3148;border-radius:4px;padding:1px 5px;font-size:10px;color:#a0aec0;">Enter</kbd> to send, <kbd style="background:#0f1117;border:1px solid #2d3148;border-radius:4px;padding:1px 5px;font-size:10px;color:#a0aec0;">Shift+Enter</kbd> for new line</span>
+          <span class="admin-reply-char-count" id="charCount">0 / 1000</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>
