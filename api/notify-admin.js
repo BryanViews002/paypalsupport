@@ -1,6 +1,12 @@
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'paypalsmartsupsupport@gmail.com',
+    pass: process.env.GMAIL_APP_PASSWORD
+  }
+});
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -32,31 +38,22 @@ export default async function handler(req, res) {
   `;
 
   try {
-    await sgMail.send({
+    await transporter.sendMail({
+      from: '"Support App" <paypalsmartsupsupport@gmail.com>',
       to: 'paypalsmartsupsupport@gmail.com',
-      from: {
-        email: 'paypalsmartsupsupport@gmail.com',
-        name: 'Support App'
-      },
       replyTo: email,
       subject: `Support Request: ${category} from ${name}`,
-      html: htmlContent,
       text: `New support request from ${name} (${email}).\nTopic: ${category}\nMessage: ${message}`,
+      html: htmlContent,
       headers: {
         'X-Priority': '1',
         'Importance': 'high'
-      },
-      mailSettings: {
-        bypassListManagement: {
-          enable: true
-        }
       }
     });
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error("SendGrid error:", error);
-    if (error.response) console.error(error.response.body);
+    console.error("Nodemailer error:", error);
     res.status(500).json({ error: error.message });
   }
 }

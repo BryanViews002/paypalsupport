@@ -1,19 +1,25 @@
-import sgMail from '@sendgrid/mail';
+import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
   const results = {};
 
-  if (!process.env.SENDGRID_API_KEY) {
-    return res.status(200).json({ error: 'SENDGRID_API_KEY is missing' });
+  if (!process.env.GMAIL_APP_PASSWORD) {
+    return res.status(200).json({ error: 'GMAIL_APP_PASSWORD is missing' });
   }
 
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'paypalsmartsupsupport@gmail.com',
+      pass: process.env.GMAIL_APP_PASSWORD
+    }
+  });
 
   // Test 1: Admin notification email
   try {
-    await sgMail.send({
+    await transporter.sendMail({
+      from: '"Support App" <paypalsmartsupsupport@gmail.com>',
       to: 'paypalsmartsupsupport@gmail.com',
-      from: { email: 'paypalsmartsupsupport@gmail.com', name: 'Support App' },
       replyTo: 'bryanjoe0012@gmail.com',
       subject: 'New Support Request from Bryan Joe',
       text: 'New support request from Bryan Joe (bryanjoe0012@gmail.com).\nTopic: Account access or security\nMessage: This is a test message to the admin.',
@@ -25,14 +31,13 @@ export default async function handler(req, res) {
   } catch (error) {
     results.adminEmailSent = false;
     results.adminEmailError = error.message;
-    results.adminSendgridDetail = error.response ? JSON.stringify(error.response.body) : null;
   }
 
   // Test 2: User notification email
   try {
-    await sgMail.send({
+    await transporter.sendMail({
+      from: '"Customer Support" <paypalsmartsupsupport@gmail.com>',
       to: 'bryanjoe0012@gmail.com',
-      from: { email: 'paypalsmartsupsupport@gmail.com', name: 'Customer Support' },
       replyTo: 'paypalsmartsupsupport@gmail.com',
       subject: 'Re: Your Support Request',
       text: 'Hello Bryan Joe,\n\nOur support team has responded to your inquiry:\n\n"Thank you for reaching out. We have received your message and will assist you shortly."\n\nThank you,\nCustomer Support Team',
@@ -46,9 +51,6 @@ export default async function handler(req, res) {
             </div>
             <p style="font-size:15px;">Thank you,<br><strong>Customer Support Team</strong></p>
           </div>
-          <div style="background:#f7f9fa;padding:16px 30px;border-top:1px solid #eaebec;font-size:11px;color:#687173;">
-            <p style="margin:0;">You are receiving this because you submitted a support request. Do not reply to this email.</p>
-          </div>
         </div>
       `,
     });
@@ -57,7 +59,6 @@ export default async function handler(req, res) {
   } catch (error) {
     results.userEmailSent = false;
     results.userEmailError = error.message;
-    results.userSendgridDetail = error.response ? JSON.stringify(error.response.body) : null;
   }
 
   results.overall = (results.adminEmailSent && results.userEmailSent) ? 'ALL_OK' : 'PARTIAL_FAILURE';
