@@ -273,6 +273,9 @@ if (startChatBtn) {
     // Save to DB
     await saveSession(currentSessionId, session);
 
+    // Save ID to local storage so this device remembers ITS specific session
+    localStorage.setItem('pp_current_session_id', currentSessionId);
+
     // Hide form, show chat
     prechatForm.style.display = 'none';
     chatInputWrap.style.display = 'block';
@@ -308,13 +311,18 @@ if (startChatBtn) {
 
   // RESTORE CHAT ON REFRESH
   async function restoreChatIfActive() {
-    const sessions = await getSessions();
-    const openSessions = Object.values(sessions).filter(s => s.status === 'open');
-    if (!openSessions.length) return;
+    // Only restore if this specific device has an active session ID stored
+    const savedSessionId = localStorage.getItem('pp_current_session_id');
+    if (!savedSessionId) return;
 
-    // Get the most recently updated open session
-    openSessions.sort((a, b) => b.updatedAt - a.updatedAt);
-    const activeSession = openSessions[0];
+    const sessions = await getSessions();
+    const activeSession = sessions[savedSessionId];
+    
+    // If session doesn't exist or is resolved, clear local storage and don't restore
+    if (!activeSession || activeSession.status !== 'open') {
+      localStorage.removeItem('pp_current_session_id');
+      return;
+    }
 
     currentSessionId = activeSession.id;
 
