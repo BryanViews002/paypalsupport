@@ -289,7 +289,12 @@ if (startChatBtn) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, category, message })
-    }).catch(err => console.error("Failed to notify admin via email:", err));
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) console.error("API Error:", data.error);
+    })
+    .catch(err => console.error("Failed to notify admin via email:", err));
 
     // Poll for new agent messages from admin
     startPolling();
