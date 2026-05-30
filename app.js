@@ -378,6 +378,18 @@ async function sendUserMessage() {
     session.unread = true;
     session.updatedAt = getTimestamp();
     await saveSession(currentSessionId, session);
+
+    // Notify Admin via Email for subsequent messages
+    fetch('/api/notify-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        name: session.name, 
+        email: session.email, 
+        category: session.category, 
+        message: text 
+      })
+    }).catch(err => console.error("Failed to notify admin via email:", err));
   }
 
   scrollToBottom();
