@@ -1772,9 +1772,39 @@ img { max-width: 100%; }
   .pp-chat-messages { max-height: 320px; }
 
   /* ---------- ADMIN ---------- */
-  .admin-layout { grid-template-columns: 1fr; }
-  .admin-sidebar { display: none; }
+  .admin-layout { 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+    overflow: hidden; 
+  }
+  .admin-sidebar { 
+    width: 100%; 
+    height: 100%; 
+    display: flex !important; 
+  }
+  .admin-main { 
+    width: 100%; 
+    height: 100%; 
+    display: none !important; 
+  }
+  
+  .admin-sidebar.hide-on-mobile { display: none !important; }
+  .admin-main.show-on-mobile { display: flex !important; }
+  
+  .admin-btn-back { 
+    display: block !important; 
+    margin-right: 12px; 
+    background: none; 
+    border: none; 
+    color: var(--pp-blue-light); 
+    font-size: 14px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    padding: 8px 0;
+  }
   .admin-user-info { grid-template-columns: 1fr 1fr; }
+  .admin-main-header-left { display: flex; align-items: center; }
 
   /* ---------- CONTAINER ---------- */
   .pp-container { padding: 0 16px; }

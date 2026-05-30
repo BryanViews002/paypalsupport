@@ -207,8 +207,23 @@ function openConversation(id) {
   document.getElementById('adminEmptyState').style.display = 'none';
   document.getElementById('adminChatView').classList.add('visible');
 
+  // Mobile toggle: hide sidebar, show main
+  document.querySelector('.admin-sidebar').classList.add('hide-on-mobile');
+  document.querySelector('.admin-main').classList.add('show-on-mobile');
+
   // Refresh sidebar highlight
   renderSidebar();
+}
+
+// ---- BACK BUTTON (MOBILE) ----
+const backBtn = document.getElementById('adminBackBtn');
+if (backBtn) {
+  backBtn.addEventListener('click', () => {
+    document.querySelector('.admin-sidebar').classList.remove('hide-on-mobile');
+    document.querySelector('.admin-main').classList.remove('show-on-mobile');
+    activeSessId = null;
+    renderSidebar();
+  });
 }
 
 // ---- RENDER MESSAGES ----
