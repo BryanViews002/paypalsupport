@@ -7,6 +7,9 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@sendgrid/mail": "^8.1.6"
+    "@sendgrid/mail": "^8.1.6",
+    "@supabase/supabase-js": "^2.106.2",
+    "@upstash/redis": "^1.38.0",
+    "@vercel/kv": "^3.0.0"
   }
 }
