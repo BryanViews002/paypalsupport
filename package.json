@@ -7,7 +7,6 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@sendgrid/mail": "^8.1.6",
-    "nodemailer": "^8.0.10"
+    "@sendgrid/mail": "^8.1.6"
   }
 }

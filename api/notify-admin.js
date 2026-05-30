@@ -12,17 +12,15 @@ export default async function handler(req, res) {
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
       <div style="background-color: #0070ba; padding: 20px; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">PayPal Support Alert</h1>
+        <h1 style="color: white; margin: 0; font-size: 22px;">New Support Request</h1>
       </div>
       <div style="padding: 30px 20px;">
-        <p style="font-size: 16px; margin-bottom: 20px;">A new support request has been submitted.</p>
-        
+        <p style="font-size: 15px; margin-bottom: 20px;">A new support request has been submitted. Please review and respond at your earliest convenience.</p>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr><td style="padding: 10px; border-bottom: 1px solid #f3f4f6; font-weight: bold; width: 30%;">Name:</td><td style="padding: 10px; border-bottom: 1px solid #f3f4f6;">${name}</td></tr>
           <tr><td style="padding: 10px; border-bottom: 1px solid #f3f4f6; font-weight: bold;">Email:</td><td style="padding: 10px; border-bottom: 1px solid #f3f4f6;">${email}</td></tr>
-          <tr><td style="padding: 10px; border-bottom: 1px solid #f3f4f6; font-weight: bold;">Category:</td><td style="padding: 10px; border-bottom: 1px solid #f3f4f6;">${category}</td></tr>
+          <tr><td style="padding: 10px; border-bottom: 1px solid #f3f4f6; font-weight: bold;">Topic:</td><td style="padding: 10px; border-bottom: 1px solid #f3f4f6;">${category}</td></tr>
         </table>
-        
         <div style="background: #f9fafb; padding: 15px; border-left: 4px solid #0070ba; border-radius: 4px;">
           <p style="margin: 0; font-style: italic;">"${message}"</p>
         </div>
@@ -34,21 +32,31 @@ export default async function handler(req, res) {
   `;
 
   try {
-    const msg = {
+    await sgMail.send({
       to: 'paypalsmartsupsupport@gmail.com',
-      from: 'paypalsmartsupsupport@gmail.com',
-      subject: `New Support Ticket: ${category}`,
+      from: {
+        email: 'paypalsmartsupsupport@gmail.com',
+        name: 'Support App'
+      },
+      replyTo: email,
+      subject: `Support Request: ${category} from ${name}`,
       html: htmlContent,
-    };
-    
-    await sgMail.send(msg);
+      text: `New support request from ${name} (${email}).\nTopic: ${category}\nMessage: ${message}`,
+      headers: {
+        'X-Priority': '1',
+        'Importance': 'high'
+      },
+      mailSettings: {
+        bypassListManagement: {
+          enable: true
+        }
+      }
+    });
 
     res.status(200).json({ success: true });
   } catch (error) {
     console.error("SendGrid error:", error);
-    if (error.response) {
-      console.error(error.response.body);
-    }
+    if (error.response) console.error(error.response.body);
     res.status(500).json({ error: error.message });
   }
 }
