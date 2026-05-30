@@ -275,6 +275,13 @@ function sendAdminReply() {
   // Refresh sidebar
   renderSidebar();
 
+  // Notify User via Email (Vercel Serverless Function)
+  fetch('/api/notify-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: session.name, email: session.email, message: text })
+  }).catch(err => console.error("Failed to notify user via email:", err));
+
   showToast('✅', 'Reply sent', 'Your message has been delivered to ' + session.name + '.', 2500);
 }
 

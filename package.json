@@ -1,0 +1,9 @@
+{
+  "name": "paypal-support",
+  "version": "1.0.0",
+  "description": "PayPal Support Chat App",
+  "private": true,
+  "engines": {
+    "node": "18.x"
+  }
+}

@@ -284,6 +284,13 @@ if (startChatBtn) {
 
     scrollToBottom();
 
+    // Notify Admin via Email (Vercel Serverless Function)
+    fetch('/api/notify-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, category, message })
+    }).catch(err => console.error("Failed to notify admin via email:", err));
+
     // Poll for new agent messages from admin
     startPolling();
   });
