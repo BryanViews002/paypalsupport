@@ -18,12 +18,42 @@ let searchQuery  = '';
 let lastSideCounts = {};
 
 // ---- STORAGE ----
-function getSessions() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-  catch { return {}; }
+async function getSessions() {
+  try {
+    const res = await fetch('/api/db?action=getAll');
+    const data = await res.json();
+    return data || {};
+  } catch { return {}; }
 }
-function saveSessions(sessions) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+
+async function saveSession(id, session) {
+  try {
+    await fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', payload: { id, session } })
+    });
+  } catch (e) { console.error('DB save failed', e); }
+}
+
+async function deleteSession(id) {
+  try {
+    await fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', payload: { id } })
+    });
+  } catch (e) { console.error('DB delete failed', e); }
+}
+
+async function clearResolvedSessions() {
+  try {
+    await fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'clearResolved' })
+    });
+  } catch (e) { console.error('DB clear resolved failed', e); }
 }
 
 // ---- UTILS ----
@@ -76,8 +106,8 @@ function showToast(icon, title, body, duration = 4000) {
 }
 
 // ---- RENDER SIDEBAR ----
-function renderSidebar() {
-  const sessions = getSessions();
+async function renderSidebar() {
+  const sessions = await getSessions();
   const list = document.getElementById('adminConvList');
   const noConvs = document.getElementById('noConvs');
 
@@ -156,8 +186,8 @@ function renderSidebar() {
 }
 
 // ---- OPEN CONVERSATION ----
-function openConversation(id) {
-  const sessions = getSessions();
+async function openConversation(id) {
+  const sessions = await getSessions();
   const session = sessions[id];
   if (!session) return;
 
@@ -165,7 +195,7 @@ function openConversation(id) {
 
   // Mark as read
   session.unread = false;
-  saveSessions(sessions);
+  await saveSession(session.id, session);
 
   // Update header
   document.getElementById('adminConvTitle').textContent = session.name + ' — ' + (session.category || 'Support');
@@ -254,12 +284,12 @@ function renderMessages(messages) {
 }
 
 // ---- SEND ADMIN REPLY ----
-function sendAdminReply() {
+async function sendAdminReply() {
   const input = document.getElementById('adminReplyInput');
   const text = input.value.trim();
   if (!text || !activeSessId) return;
 
-  const sessions = getSessions();
+  const sessions = await getSessions();
   const session = sessions[activeSessId];
   if (!session || session.status === 'resolved') return;
 
@@ -274,7 +304,7 @@ function sendAdminReply() {
   session.messages = session.messages || [];
   session.messages.push(msg);
   session.updatedAt = Date.now();
-  saveSessions(sessions);
+  await saveSession(session.id, session);
 
   // Clear input
   input.value = '';
@@ -330,8 +360,8 @@ function appendAdminMessage(m, userName) {
 
 // ---- POLL FOR NEW USER MESSAGES ----
 let lastMsgCounts = {};
-setInterval(() => {
-  const sessions = getSessions();
+setInterval(async () => {
+  const sessions = await getSessions();
 
   // Check for new messages in the active convo
   if (activeSessId && sessions[activeSessId]) {
@@ -355,9 +385,9 @@ setInterval(() => {
 }, 1500);
 
 // ---- RESOLVE / REOPEN ----
-document.getElementById('resolveBtn').addEventListener('click', () => {
+document.getElementById('resolveBtn').addEventListener('click', async () => {
   if (!activeSessId) return;
-  const sessions = getSessions();
+  const sessions = await getSessions();
   const session = sessions[activeSessId];
   if (!session) return;
 
@@ -370,19 +400,18 @@ document.getElementById('resolveBtn').addEventListener('click', () => {
     showToast('✅', 'Marked as resolved', session.name + "'s conversation has been resolved.");
   }
   session.updatedAt = Date.now();
-  saveSessions(sessions);
+  await saveSession(session.id, session);
   openConversation(activeSessId);
 });
 
 // ---- DELETE CONVERSATION ----
-document.getElementById('deleteConvBtn').addEventListener('click', () => {
+document.getElementById('deleteConvBtn').addEventListener('click', async () => {
   if (!activeSessId) return;
-  const sessions = getSessions();
+  const sessions = await getSessions();
   const session = sessions[activeSessId];
   if (!session) return;
   if (!confirm(`Delete conversation with ${session.name}? This cannot be undone.`)) return;
-  delete sessions[activeSessId];
-  saveSessions(sessions);
+  await deleteSession(activeSessId);
   activeSessId = null;
   document.getElementById('adminEmptyState').style.display = 'flex';
   document.getElementById('adminChatView').classList.remove('visible');
@@ -391,15 +420,12 @@ document.getElementById('deleteConvBtn').addEventListener('click', () => {
 });
 
 // ---- CLEAR RESOLVED ----
-document.getElementById('clearResolvedBtn').addEventListener('click', () => {
-  const sessions = getSessions();
+document.getElementById('clearResolvedBtn').addEventListener('click', async () => {
+  const sessions = await getSessions();
   const count = Object.values(sessions).filter(s => s.status === 'resolved').length;
   if (count === 0) { showToast('ℹ️', 'Nothing to clear', 'There are no resolved conversations.'); return; }
   if (!confirm(`Delete all ${count} resolved conversations?`)) return;
-  Object.keys(sessions).forEach(k => {
-    if (sessions[k].status === 'resolved') delete sessions[k];
-  });
-  saveSessions(sessions);
+  await clearResolvedSessions();
   if (activeSessId && !sessions[activeSessId]) {
     activeSessId = null;
     document.getElementById('adminEmptyState').style.display = 'flex';

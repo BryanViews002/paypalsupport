@@ -20,14 +20,22 @@ function generateId() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
-function getSessions() {
+async function getSessions() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const res = await fetch('/api/db?action=getAll');
+    const data = await res.json();
+    return data || {};
   } catch { return {}; }
 }
 
-function saveSessions(sessions) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+async function saveSession(id, session) {
+  try {
+    await fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', payload: { id, session } })
+    });
+  } catch (e) { console.error('DB save failed', e); }
 }
 
 // ---- HEADER SCROLL ----
@@ -222,7 +230,7 @@ let lastMessageCount = 0;
 let pollInterval = null;
 
 if (startChatBtn) {
-  startChatBtn.addEventListener('click', () => {
+  startChatBtn.addEventListener('click', async () => {
     const name     = document.getElementById('userFullName').value.trim();
     const email    = document.getElementById('userEmail').value.trim();
     const category = document.getElementById('issueCategory').value;
@@ -262,10 +270,8 @@ if (startChatBtn) {
       ]
     };
 
-    // Save to localStorage
-    const sessions = getSessions();
-    sessions[currentSessionId] = session;
-    saveSessions(sessions);
+    // Save to DB
+    await saveSession(currentSessionId, session);
 
     // Hide form, show chat
     prechatForm.style.display = 'none';
@@ -301,8 +307,8 @@ if (startChatBtn) {
   });
 
   // RESTORE CHAT ON REFRESH
-  function restoreChatIfActive() {
-    const sessions = getSessions();
+  async function restoreChatIfActive() {
+    const sessions = await getSessions();
     const openSessions = Object.values(sessions).filter(s => s.status === 'open');
     if (!openSessions.length) return;
 
@@ -347,7 +353,7 @@ if (startChatBtn) {
 }
 
 // ---- SEND MESSAGE ----
-function sendUserMessage() {
+async function sendUserMessage() {
   if (!chatInput || !currentSessionId) return;
   const text = chatInput.value.trim();
   if (!text) return;
@@ -358,8 +364,8 @@ function sendUserMessage() {
   // Append to UI
   appendMessage('user', text);
 
-  // Save to session
-  const sessions = getSessions();
+  // Save to session DB
+  const sessions = await getSessions();
   const session = sessions[currentSessionId];
   if (session) {
     session.messages.push({
@@ -371,8 +377,7 @@ function sendUserMessage() {
     });
     session.unread = true;
     session.updatedAt = getTimestamp();
-    sessions[currentSessionId] = session;
-    saveSessions(sessions);
+    await saveSession(currentSessionId, session);
   }
 
   scrollToBottom();
@@ -420,13 +425,13 @@ function appendMessage(from, text) {
 }
 
 // ---- DELIVER AGENT MESSAGE (from admin reply or auto-reply) ----
-function deliverAgentMessage(text) {
+async function deliverAgentMessage(text) {
   if (!chatMessages) return;
   appendMessage('agent', text);
 
-  // Save to session
+  // Save to session DB
   if (currentSessionId) {
-    const sessions = getSessions();
+    const sessions = await getSessions();
     const session = sessions[currentSessionId];
     if (session) {
       session.messages.push({
@@ -437,7 +442,7 @@ function deliverAgentMessage(text) {
         timestamp: getTimestamp()
       });
       session.updatedAt = getTimestamp();
-      saveSessions(sessions);
+      await saveSession(currentSessionId, session);
     }
   }
 }
@@ -461,9 +466,9 @@ function scrollToBottom() {
 // ---- POLLING (check for new agent messages) ----
 function startPolling() {
   if (pollInterval) clearInterval(pollInterval);
-  pollInterval = setInterval(() => {
+  pollInterval = setInterval(async () => {
     if (!currentSessionId) return;
-    const sessions = getSessions();
+    const sessions = await getSessions();
     const session = sessions[currentSessionId];
     if (!session) return;
 
