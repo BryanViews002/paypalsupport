@@ -20,16 +20,16 @@
     {
       "src": "admin.js",
       "use": "@vercel/static"
-    },
-    {
-      "src": "README.md",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/api/notify-admin",
+      "dest": "/api/notify-admin.js"
+    },
+    {
+      "src": "/api/notify-user",
+      "dest": "/api/notify-user.js"
     },
     {
       "src": "/(.*)",
