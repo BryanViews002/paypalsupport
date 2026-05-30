@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from: 'PayPal Support <onboarding@resend.dev>',
-        to: 'bryanjoe0012@gmail.com',
+        to: 'paypalsmartsupport@gmail.com',
         subject: `New Support Ticket: ${category}`,
         html: htmlContent
       })
