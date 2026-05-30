@@ -310,6 +310,11 @@ if (startChatBtn) {
   });
 
   // RESTORE CHAT ON REFRESH
+  // Hide form immediately if we have a session ID, to prevent flashing
+  if (localStorage.getItem('pp_current_session_id')) {
+    if (prechatForm) prechatForm.style.display = 'none';
+  }
+
   async function restoreChatIfActive() {
     // Only restore if this specific device has an active session ID stored
     const savedSessionId = localStorage.getItem('pp_current_session_id');
@@ -321,6 +326,8 @@ if (startChatBtn) {
     // If session doesn't exist or is resolved, clear local storage and don't restore
     if (!activeSession || activeSession.status !== 'open') {
       localStorage.removeItem('pp_current_session_id');
+      if (prechatForm) prechatForm.style.display = 'block';
+      if (chatInputWrap) chatInputWrap.style.display = 'none';
       return;
     }
 
