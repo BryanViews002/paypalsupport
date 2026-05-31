@@ -111,8 +111,8 @@
             <input type="text" id="userFullName" placeholder="Your full name" autocomplete="name"/>
           </div>
           <div class="pp-form-group">
-            <label for="userEmail">Email Address</label>
-            <input type="email" id="userEmail" placeholder="Email linked to your PayPal account" autocomplete="email"/>
+            <label for="userEmail">Email Address <span style="color:#e53e3e;">*</span></label>
+            <input type="email" id="userEmail" placeholder="Email linked to your PayPal account" autocomplete="email" required/>
           </div>
           <div class="pp-form-group">
             <label for="issueCategory">What do you need help with?</label>
@@ -150,6 +150,13 @@
             </button>
           </div>
         </div>
+
+        <!-- Resolved banner (shown for past/resolved conversations) -->
+        <div id="resolvedBanner" style="display:none; padding:14px 16px; background:#f0fdf4; border-top:1px solid #d1fae5; text-align:center;">
+          <p style="margin:0 0 10px 0; font-size:13px; color:#065f46; font-weight:600;">✅ This conversation has been resolved.</p>
+          <button class="pp-btn pp-btn-primary" id="startNewChatBtn" style="font-size:13px; padding:8px 20px;">Start New Chat</button>
+        </div>
+
       </div>
 
     </div>

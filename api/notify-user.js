@@ -8,34 +8,24 @@ export default async function handler(req, res) {
   const { name, email, message } = req.body;
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
       user: 'paypalsmartsupsupport@gmail.com',
       pass: process.env.GMAIL_APP_PASSWORD
     }
   });
 
-  const htmlContent = `
-    <div style="font-family: sans-serif; font-size: 16px; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.5;">
-      <p>Hello ${name},</p>
-      <p>You have received a new message from Support:</p>
-      <blockquote style="margin: 0; padding: 15px; border-left: 4px solid #0070ba; background-color: #f9f9f9; font-style: italic;">
-        ${message}
-      </blockquote>
-      <p style="margin-top: 20px;">Please return to your chat session on the website to reply.</p>
-      <br>
-      <p style="font-size: 14px; color: #666;">Thank you,<br>Customer Support</p>
-    </div>
-  `;
+  // Plain text-first approach to avoid spam filters
+  const plainText = `Hi ${name},\n\nA support agent has replied to your message:\n\n---\n${message}\n---\n\nReturn to the website to continue the conversation.\n\npaypalsmartsupsupport@gmail.com`;
 
   try {
     await transporter.sendMail({
-      from: '"Customer Support" <paypalsmartsupsupport@gmail.com>',
+      from: 'paypalsmartsupsupport@gmail.com',
       to: email,
-      replyTo: 'paypalsmartsupsupport@gmail.com',
-      subject: `New Message from Support`,
-      text: `Hello ${name},\n\nYou have received a new message from Support:\n\n"${message}"\n\nPlease return to your chat session on the website to reply.\n\nThank you,\nCustomer Support`,
-      html: htmlContent
+      subject: `Re: Your support message`,
+      text: plainText,
     });
 
     res.status(200).json({ success: true });

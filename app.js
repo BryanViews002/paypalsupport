@@ -237,7 +237,7 @@ if (startChatBtn) {
     const message  = document.getElementById('prechatMessage').value.trim();
 
     if (!name) { shakeField('userFullName'); return; }
-    if (!email || !email.includes('@')) { shakeField('userEmail'); return; }
+    if (!email || !email.includes('@') || !email.includes('.')) { shakeField('userEmail'); return; }
     if (!category) { shakeField('issueCategory'); return; }
     if (!message) { shakeField('prechatMessage'); return; }
 
@@ -323,8 +323,8 @@ if (startChatBtn) {
     const sessions = await getSessions();
     const activeSession = sessions[savedSessionId];
     
-    // If session doesn't exist or is resolved, clear local storage and don't restore
-    if (!activeSession || activeSession.status !== 'open') {
+    // If session was deleted from DB entirely, reset to fresh form
+    if (!activeSession) {
       localStorage.removeItem('pp_current_session_id');
       if (prechatForm) prechatForm.style.display = 'block';
       if (chatInputWrap) chatInputWrap.style.display = 'none';
@@ -333,13 +333,14 @@ if (startChatBtn) {
 
     currentSessionId = activeSession.id;
 
-    // Hide form, show chat
+    // Hide form, show chat area
     prechatForm.style.display = 'none';
-    chatInputWrap.style.display = 'block';
+    // Hide welcome message since we have real messages
+    const welcomeMsg = document.getElementById('welcomeMsg');
+    if (welcomeMsg) welcomeMsg.style.display = 'none';
 
     // Render all messages
     activeSession.messages.forEach(m => {
-      // Create element directly to ensure IDs match
       const msg = document.createElement('div');
       msg.className = `pp-msg pp-msg-${m.from}`;
       msg.id = 'msg-' + m.id;
@@ -360,7 +361,25 @@ if (startChatBtn) {
 
     scrollToBottom();
     lastMessageCount = activeSession.messages.length;
-    startPolling();
+
+    if (activeSession.status === 'open') {
+      // Active session — show input, start polling
+      chatInputWrap.style.display = 'block';
+      startPolling();
+    } else {
+      // Resolved session — show read-only with resolved banner + Start New Chat
+      chatInputWrap.style.display = 'none';
+      const resolvedBanner = document.getElementById('resolvedBanner');
+      if (resolvedBanner) resolvedBanner.style.display = 'block';
+
+      const startNewChatBtn = document.getElementById('startNewChatBtn');
+      if (startNewChatBtn) {
+        startNewChatBtn.addEventListener('click', () => {
+          localStorage.removeItem('pp_current_session_id');
+          window.location.reload();
+        });
+      }
+    }
   }
 
   // Run on load
