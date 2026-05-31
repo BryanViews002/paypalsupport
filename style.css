@@ -1858,3 +1858,143 @@ img { max-width: 100%; }
   .pp-container { padding: 0 12px; }
 }
 
+/* ============================================
+   IMAGE MESSAGES
+   ============================================ */
+
+/* Chat image (user side) */
+.pp-msg-image {
+  max-width: 240px;
+  max-height: 200px;
+  border-radius: 10px;
+  display: block;
+  cursor: pointer;
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+
+/* Admin chat image */
+.admin-msg-image {
+  max-width: 260px;
+  max-height: 220px;
+  border-radius: 10px;
+  display: block;
+  cursor: pointer;
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+
+/* Image upload button — user side */
+.pp-img-upload-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.pp-img-upload-btn:hover { background: #f3f4f6; color: #003087; }
+
+/* Image upload button — admin side */
+.admin-img-upload-btn {
+  background: none;
+  border: 1px solid #2d3148;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 6px 10px;
+  color: #a0aec0;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s, color 0.15s;
+  margin-right: 6px;
+}
+.admin-img-upload-btn:hover { background: #1a1f36; color: #fff; }
+
+/* Image preview before sending */
+.pp-img-preview-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 6px 0 0 6px;
+}
+.pp-img-preview-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #0070ba;
+}
+.pp-img-preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Admin image preview */
+.admin-img-preview-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 6px 0 0 0;
+}
+.admin-img-preview-thumb {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #0070ba;
+}
+.admin-img-preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Lightbox overlay for full-size image view */
+.pp-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: fadeIn 0.15s ease;
+}
+.pp-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 10px;
+  object-fit: contain;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.5);
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

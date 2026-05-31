@@ -224,10 +224,66 @@ const chatMessages  = document.getElementById('chatMessages');
 const chatInput     = document.getElementById('chatInput');
 const sendMsgBtn    = document.getElementById('sendMsgBtn');
 const agentTyping   = document.getElementById('agentTyping');
+const userImgBtn    = document.getElementById('userImgBtn');
+const userImgInput  = document.getElementById('userImgInput');
+const userImgPreviewArea = document.getElementById('userImgPreviewArea');
 
 let currentSessionId = null;
 let lastMessageCount = 0;
 let pollInterval = null;
+let pendingUserImage = null; // base64 data URL of image to send
+
+// ---- IMAGE HELPERS ----
+function compressImage(file, maxWidth = 900, quality = 0.82) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) { height = Math.round(height * maxWidth / width); width = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function openLightbox(src) {
+  const lb = document.createElement('div');
+  lb.className = 'pp-lightbox';
+  lb.innerHTML = `<img src="${src}" alt="Full image"/>`;
+  lb.addEventListener('click', () => lb.remove());
+  document.body.appendChild(lb);
+}
+
+// Wire image upload button
+if (userImgBtn && userImgInput) {
+  userImgBtn.addEventListener('click', () => userImgInput.click());
+  userImgInput.addEventListener('change', async () => {
+    const file = userImgInput.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB.'); return; }
+    const compressed = await compressImage(file);
+    pendingUserImage = compressed;
+    userImgPreviewArea.style.display = 'block';
+    userImgPreviewArea.innerHTML = `
+      <div class="pp-img-preview-wrap" id="userImgPreview">
+        <img class="pp-img-preview-thumb" src="${compressed}" alt="Preview"/>
+        <button class="pp-img-preview-remove" id="removeUserImg" title="Remove">✕</button>
+      </div>`;
+    document.getElementById('removeUserImg').addEventListener('click', () => {
+      pendingUserImage = null;
+      userImgPreviewArea.style.display = 'none';
+      userImgPreviewArea.innerHTML = '';
+      userImgInput.value = '';
+    });
+  });
+}
 
 if (startChatBtn) {
   startChatBtn.addEventListener('click', async () => {
@@ -349,13 +405,20 @@ if (startChatBtn) {
         ? `<div class="pp-msg-avatar"><img src="https://www.paypalobjects.com/marketing/web/icons/monogram/pp32.png" alt="Agent"/></div>`
         : `<div class="pp-msg-avatar" style="background:#003087;color:white;font-weight:700;font-size:12px;">U</div>`;
 
+      const contentHtml = (m.type === 'image' && m.imageUrl)
+        ? `<img class="pp-msg-image" src="${m.imageUrl}" alt="Image"/>`
+        : `<p>${escapeHtml(m.text)}</p>`;
+
       msg.innerHTML = `
         ${avatarHtml}
         <div class="pp-msg-bubble">
-          <p>${escapeHtml(m.text)}</p>
+          ${contentHtml}
           <span class="pp-msg-time">${m.time}</span>
         </div>
       `;
+      if (m.type === 'image' && m.imageUrl) {
+        msg.querySelector('.pp-msg-image').addEventListener('click', () => openLightbox(m.imageUrl));
+      }
       chatMessages.appendChild(msg);
     });
 
@@ -390,40 +453,46 @@ if (startChatBtn) {
 async function sendUserMessage() {
   if (!chatInput || !currentSessionId) return;
   const text = chatInput.value.trim();
-  if (!text) return;
+  const hasImage = !!pendingUserImage;
+  if (!text && !hasImage) return;
+
+  const imageToSend = pendingUserImage;
 
   chatInput.value = '';
   chatInput.style.height = 'auto';
 
+  // Clear image preview
+  if (hasImage) {
+    pendingUserImage = null;
+    if (userImgPreviewArea) { userImgPreviewArea.style.display = 'none'; userImgPreviewArea.innerHTML = ''; }
+    if (userImgInput) userImgInput.value = '';
+  }
+
   // Append to UI
-  appendMessage('user', text);
+  if (hasImage) appendMessage('user', '', 'image', imageToSend);
+  if (text) appendMessage('user', text);
 
   // Save to session DB
   const sessions = await getSessions();
   const session = sessions[currentSessionId];
   if (session) {
-    session.messages.push({
-      id: generateId(),
-      from: 'user',
-      text,
-      time: getTime(),
-      timestamp: getTimestamp()
-    });
+    if (hasImage) {
+      session.messages.push({ id: generateId(), from: 'user', type: 'image', imageUrl: imageToSend, text: '', time: getTime(), timestamp: getTimestamp() });
+    }
+    if (text) {
+      session.messages.push({ id: generateId(), from: 'user', type: 'text', text, time: getTime(), timestamp: getTimestamp() });
+    }
     session.unread = true;
     session.updatedAt = getTimestamp();
     await saveSession(currentSessionId, session);
 
-    // Notify Admin via Email for subsequent messages
+    // Notify Admin via Email
+    const notifyText = text || '📷 [Image]';
     fetch('/api/notify-admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        name: session.name, 
-        email: session.email, 
-        category: session.category, 
-        message: text 
-      })
-    }).catch(err => console.error("Failed to notify admin via email:", err));
+      body: JSON.stringify({ name: session.name, email: session.email, category: session.category, message: notifyText })
+    }).catch(err => console.error('Failed to notify admin:', err));
   }
 
   scrollToBottom();
@@ -448,7 +517,7 @@ if (chatInput) {
 }
 
 // ---- APPEND MESSAGE (user-facing) ----
-function appendMessage(from, text) {
+function appendMessage(from, text, type = 'text', imageUrl = null) {
   if (!chatMessages) return;
   const msg = document.createElement('div');
   msg.className = `pp-msg pp-msg-${from}`;
@@ -457,15 +526,22 @@ function appendMessage(from, text) {
     ? `<div class="pp-msg-avatar"><img src="https://www.paypalobjects.com/marketing/web/icons/monogram/pp32.png" alt="Agent"/></div>`
     : `<div class="pp-msg-avatar" style="background:#003087;color:white;font-weight:700;font-size:12px;">U</div>`;
 
+  const contentHtml = (type === 'image' && imageUrl)
+    ? `<img class="pp-msg-image" src="${imageUrl}" alt="Image"/>`
+    : `<p>${escapeHtml(text)}</p>`;
+
   msg.innerHTML = `
     ${avatarHtml}
     <div class="pp-msg-bubble">
-      <p>${escapeHtml(text)}</p>
+      ${contentHtml}
       <span class="pp-msg-time">${getTime()}</span>
     </div>
   `;
 
-  // Remove welcome message avatar on agent side for clean look
+  if (type === 'image' && imageUrl) {
+    msg.querySelector('.pp-msg-image').addEventListener('click', () => openLightbox(imageUrl));
+  }
+
   chatMessages.appendChild(msg);
   scrollToBottom();
 }
@@ -524,12 +600,11 @@ function startPolling() {
       const newMsgs = msgs.slice(lastMessageCount);
       newMsgs.forEach(m => {
         if (m.from === 'agent') {
-          // Check it's not already in the DOM
           if (!document.getElementById('msg-' + m.id)) {
             showAgentTyping();
             setTimeout(() => {
               hideAgentTyping();
-              appendMessageWithId('agent', m.text, m.id);
+              appendMessageWithId('agent', m.text, m.id, m.type, m.imageUrl);
             }, 800);
           }
         }
@@ -579,7 +654,7 @@ function startPolling() {
   }, 1500);
 }
 
-function appendMessageWithId(from, text, id) {
+function appendMessageWithId(from, text, id, type = 'text', imageUrl = null) {
   if (!chatMessages) return;
   if (document.getElementById('msg-' + id)) return;
 
@@ -591,13 +666,22 @@ function appendMessageWithId(from, text, id) {
     ? `<div class="pp-msg-avatar"><img src="https://www.paypalobjects.com/marketing/web/icons/monogram/pp32.png" alt="Agent"/></div>`
     : `<div class="pp-msg-avatar" style="background:#003087;color:white;font-weight:700;font-size:12px;">U</div>`;
 
+  const contentHtml = (type === 'image' && imageUrl)
+    ? `<img class="pp-msg-image" src="${imageUrl}" alt="Image"/>`
+    : `<p>${escapeHtml(text)}</p>`;
+
   msg.innerHTML = `
     ${avatarHtml}
     <div class="pp-msg-bubble">
-      <p>${escapeHtml(text)}</p>
+      ${contentHtml}
       <span class="pp-msg-time">${getTime()}</span>
     </div>
   `;
+
+  if (type === 'image' && imageUrl) {
+    msg.querySelector('.pp-msg-image').addEventListener('click', () => openLightbox(imageUrl));
+  }
+
   chatMessages.appendChild(msg);
   scrollToBottom();
 }

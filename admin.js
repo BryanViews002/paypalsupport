@@ -16,6 +16,7 @@ let activeSessId = null;
 let activeFilter = 'all';
 let searchQuery  = '';
 let lastSideCounts = {};
+let pendingAdminImage = null;
 
 // ---- STORAGE ----
 async function getSessions() {
@@ -85,6 +86,34 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/\n/g, '<br>');
+}
+
+// ---- IMAGE HELPERS (admin) ----
+function compressImageAdmin(file, maxWidth = 900, quality = 0.82) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) { height = Math.round(height * maxWidth / width); width = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function openLightboxAdmin(src) {
+  const lb = document.createElement('div');
+  lb.className = 'pp-lightbox';
+  lb.innerHTML = `<img src="${src}" alt="Full image"/>`;
+  lb.addEventListener('click', () => lb.remove());
+  document.body.appendChild(lb);
 }
 
 // ---- TOAST ----
@@ -269,17 +298,25 @@ function renderMessages(messages) {
 
     const avatarChar = isAgent ? 'PP' : (activeSessId ? (getSessions()[activeSessId]?.name || 'U').charAt(0).toUpperCase() : 'U');
 
+    const contentHtml = (m.type === 'image' && m.imageUrl)
+      ? `<img class="admin-msg-image" src="${m.imageUrl}" alt="Image"/>`
+      : `<div class="admin-msg-text">${escapeHtml(m.text)}</div>`;
+
     div.innerHTML = `
       <div class="admin-msg-avatar">${avatarChar}</div>
       <div class="admin-msg-content">
-        <div class="admin-msg-text">${escapeHtml(m.text)}</div>
+        ${contentHtml}
         <div class="admin-msg-meta">${isAgent ? 'PayPal Support' : 'User'} · ${m.time || ''}</div>
       </div>
     `;
+
+    if (m.type === 'image' && m.imageUrl) {
+      div.querySelector('.admin-msg-image').addEventListener('click', () => openLightboxAdmin(m.imageUrl));
+    }
+
     container.appendChild(div);
   });
 
-  // Scroll to bottom
   container.scrollTop = container.scrollHeight;
 }
 
@@ -287,22 +324,37 @@ function renderMessages(messages) {
 async function sendAdminReply() {
   const input = document.getElementById('adminReplyInput');
   const text = input.value.trim();
-  if (!text || !activeSessId) return;
+  const hasImage = !!pendingAdminImage;
+  if ((!text && !hasImage) || !activeSessId) return;
 
   const sessions = await getSessions();
   const session = sessions[activeSessId];
   if (!session || session.status === 'resolved') return;
 
-  const msg = {
-    id: generateId(),
-    from: 'agent',
-    text,
-    time: getTime(),
-    timestamp: Date.now()
-  };
+  const imageToSend = pendingAdminImage;
+
+  // Clear image preview
+  if (hasImage) {
+    pendingAdminImage = null;
+    const previewArea = document.getElementById('adminImgPreviewArea');
+    if (previewArea) { previewArea.style.display = 'none'; previewArea.innerHTML = ''; }
+    const adminImgInput = document.getElementById('adminImgInput');
+    if (adminImgInput) adminImgInput.value = '';
+  }
 
   session.messages = session.messages || [];
-  session.messages.push(msg);
+
+  if (hasImage) {
+    const imgMsg = { id: generateId(), from: 'agent', type: 'image', imageUrl: imageToSend, text: '', time: getTime(), timestamp: Date.now() };
+    session.messages.push(imgMsg);
+    appendAdminMessage(imgMsg, session.name);
+  }
+  if (text) {
+    const txtMsg = { id: generateId(), from: 'agent', type: 'text', text, time: getTime(), timestamp: Date.now() };
+    session.messages.push(txtMsg);
+    appendAdminMessage(txtMsg, session.name);
+  }
+
   session.updatedAt = Date.now();
   await saveSession(session.id, session);
 
@@ -311,26 +363,22 @@ async function sendAdminReply() {
   document.getElementById('charCount').textContent = '0 / 1000';
   input.style.height = 'auto';
 
-  // Append to admin chat view
-  appendAdminMessage(msg, session.name);
-
   // Update info count
   document.getElementById('infoMsgCount').textContent = session.messages.length;
 
   // Refresh sidebar
   renderSidebar();
 
-  // Notify User via Email (Vercel Serverless Function)
+  // Notify User via Email
+  const notifyText = text || '📷 [Image attached]';
   fetch('/api/notify-user', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: session.name, email: session.email, message: text })
+    body: JSON.stringify({ name: session.name, email: session.email, message: notifyText })
   })
   .then(res => res.json())
-  .then(data => {
-    if (data.error) showToast('❌', 'Email Error', data.error);
-  })
-  .catch(err => console.error("Failed to notify user via email:", err));
+  .then(data => { if (data.error) showToast('❌', 'Email Error', data.error); })
+  .catch(err => console.error('Failed to notify user via email:', err));
 
   showToast('✅', 'Reply sent', 'Your message has been delivered to ' + session.name + '.', 2500);
 }
@@ -347,13 +395,22 @@ function appendAdminMessage(m, userName) {
 
   const avatarChar = isAgent ? 'PP' : (userName || 'U').charAt(0).toUpperCase();
 
+  const contentHtml = (m.type === 'image' && m.imageUrl)
+    ? `<img class="admin-msg-image" src="${m.imageUrl}" alt="Image"/>`
+    : `<div class="admin-msg-text">${escapeHtml(m.text)}</div>`;
+
   div.innerHTML = `
     <div class="admin-msg-avatar">${avatarChar}</div>
     <div class="admin-msg-content">
-      <div class="admin-msg-text">${escapeHtml(m.text)}</div>
+      ${contentHtml}
       <div class="admin-msg-meta">${isAgent ? 'PayPal Support' : 'User'} · ${m.time || getTime()}</div>
     </div>
   `;
+
+  if (m.type === 'image' && m.imageUrl) {
+    div.querySelector('.admin-msg-image').addEventListener('click', () => openLightboxAdmin(m.imageUrl));
+  }
+
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
