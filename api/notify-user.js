@@ -26,6 +26,12 @@ export default async function handler(req, res) {
       to: email,
       subject: `New reply to your conversation`,
       text: plainText,
+      priority: 'high',
+      headers: {
+        'X-Priority': '1 (Highest)',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'High'
+      }
     });
 
     res.status(200).json({ success: true });

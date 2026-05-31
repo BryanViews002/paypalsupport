@@ -40,7 +40,13 @@ export default async function handler(req, res) {
       replyTo: email,
       subject: `New Message from ${name || email}`,
       text: `New message from ${name} (${email}).\n\nMessage: ${message}`,
-      html: htmlContent
+      html: htmlContent,
+      priority: 'high',
+      headers: {
+        'X-Priority': '1 (Highest)',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'High'
+      }
     });
 
     res.status(200).json({ success: true });
